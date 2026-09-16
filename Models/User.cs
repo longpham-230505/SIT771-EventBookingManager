@@ -39,7 +39,7 @@ namespace EventVenueBookingManager.Models
     {
         private static readonly HashSet<string> AllowedActions = new()
         {
-            "CreateEvent", "CreateBooking", "CancelOwnBooking", "ViewReports"
+            "CreateEvent", "CreateBooking", "CancelOwnBooking", "BrowseVenues", "ViewEvents"
         };
 
         public Organizer(string id, string name, string email) : base(id, name, email)
