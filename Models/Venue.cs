@@ -9,7 +9,6 @@ namespace EventVenueBookingManager.Models
         public string Id { get; }
         public string Name { get; set; }
         public int Capacity { get; set; }
-        public List<string> Facilities { get; } = new();
         public abstract VenueType Type { get; }
 
         protected Venue(string id, string name, int capacity)
