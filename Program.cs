@@ -36,11 +36,18 @@ namespace EventVenueBookingManager
             // Welcome text when starting the system
             Console.WriteLine("Welcome to the Event & Venue Booking Manager");
 
-            // Log-in to the current session
-            var currentUser = LogIn(userRepository);
+            // Looping to mimic the log-in / log-out behavior
+            while (true)
+            {
+                // Log-in to the current session
+                var currentUser = LogIn(userRepository);
 
-            // Start the loop
-            RunMenuLoop(currentUser, bookingManager, venueRepository, eventRepository, bookingRepository);
+                // Start the loop
+                var logOut = RunMenuLoop(currentUser, bookingManager, venueRepository, eventRepository, bookingRepository);
+
+                // Exit the loop when option 'Quit' is picked
+                if (!logOut) break;
+            }
 
             Console.WriteLine();
             Console.WriteLine("Goodbye!");
@@ -79,7 +86,7 @@ namespace EventVenueBookingManager
             return user;
         }
 
-        private static void RunMenuLoop(User currentUser, BookingManager bookingManager, VenueRepository venueRepository,
+        private static bool RunMenuLoop(User currentUser, BookingManager bookingManager, VenueRepository venueRepository,
             EventRepository eventRepository, BookingRepository bookingRepository)
         {
             // Each entry is protected by the same permission check the domain model already defines (User.CanPerform)
@@ -102,14 +109,20 @@ namespace EventVenueBookingManager
                 Console.WriteLine("What would you like to do?");
                 for (int i = 0; i < available.Count; i++)
                     Console.WriteLine($"  {i + 1}. {available[i].Label}");
-                Console.WriteLine("  0. Exit");
+
+                // Option for logging out
+                Console.WriteLine($"  {available.Count + 1}. Log out");
+
+                // O is 'Quit' by default
+                Console.WriteLine("  0. Quit");
 
                 var choice = Helper.ReadInt("Choose an option");
 
-                // 0 is exit by default
-                if (choice == 0)
-                    return;
+                // Default options to terminate the current log-in session
+                if (choice == 0) return false;
+                if (choice == available.Count + 1) return true;
 
+                // Validate the chosen option
                 if (choice < 1 || choice > available.Count)
                 {
                     Console.WriteLine("Invalid choice, try again.");
