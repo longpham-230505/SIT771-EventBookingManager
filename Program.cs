@@ -66,10 +66,23 @@ namespace EventVenueBookingManager
 
         private static User LogIn(UserRepository userRepository)
         {
-            // Asks for credential
+            // Asks for email first to look up for existing account
             Console.WriteLine();
-            var name = Helper.ReadNonEmptyString("Your name");
             var email = Helper.ReadNonEmptyString("Your email");
+
+            // Look up for existing user
+            // For simplicity the system only need an email address as identifier
+            var existingUser = userRepository.GetAll()
+                .FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+
+            if (existingUser is not null)
+            {
+                Console.WriteLine($"Welcome back, {existingUser}!");
+                return existingUser;
+            }
+
+            // Asks for other credentials if new email
+            var name = Helper.ReadNonEmptyString("Your name");
             var role = Helper.ChooseEnum<UserRole>("Select your role:");
 
             // Create the user instance
@@ -95,7 +108,7 @@ namespace EventVenueBookingManager
                 ("Browse venues", "BrowseVenues", () => BrowseVenues(venueRepository)),
                 ("Add a venue", "AddVenue", () => AddVenue(bookingManager)),
                 ("Create event & booking", "CreateBooking", () => CreateEventAndBooking(bookingManager, venueRepository, currentUser)),
-                ("View events", "ViewEvents", () => ViewEvents(eventRepository)),
+                ("View events", "ViewEvents", () => ViewEvents(eventRepository, bookingRepository)),
                 ("Cancel a booking", "CancelOwnBooking", () => CancelBooking(bookingManager, bookingRepository, currentUser)),
             };
 
@@ -196,15 +209,24 @@ namespace EventVenueBookingManager
             Console.WriteLine($"Booking confirmed: {booking}");
         }
 
-        private static void ViewEvents(EventRepository eventRepository)
-        {
-            var events = eventRepository.GetAll().ToList();
+        private static void ViewEvents(EventRepository eventRepository, BookingRepository bookingRepository)
+        {  
+            // Filters out events that has been cancelled
+            var activeEventIds = bookingRepository.GetAll()
+                .Where(b => b.Status != BookingStatus.Cancelled)
+                .Select(b => b.EventId)
+                .ToHashSet();
+            
+            // Form the active event list
+            var events = eventRepository.GetAll()
+                .Where(e => activeEventIds.Contains(e.Id))
+                .ToList();
 
             // If no active event is available
             Console.WriteLine();
             if (events.Count == 0)
             {
-                Console.WriteLine("No events have been created yet.");
+                Console.WriteLine("No active events available right now.");
                 return;
             }
 
